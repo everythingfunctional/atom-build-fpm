@@ -1,0 +1,18 @@
+{
+  "name": "atom-build-fpm",
+  "main": "./lib/atom-build-fpm",
+  "version": "0.0.0",
+  "description": "A plugin for running the Fortran Package Manager (fpm) from within Atom",
+  "keywords": [
+  ],
+  "activationCommands": {
+    "atom-workspace": "atom-build-fpm:toggle"
+  },
+  "repository": "https://github.com/everythingfunctional/atom-build-fpm",
+  "license": "MIT",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "dependencies": {
+  }
+}
