@@ -1,73 +1,60 @@
 'use babel';
 
-import AtomBuildFpm from '../lib/atom-build-fpm';
+import fs from 'fs-extra';
+import temp from 'temp';
+import { vouch } from 'atom-build-spec-helpers';
+import { provideBuilder } from '../lib/fpm';
 
 // Use the command `window:run-package-specs` (cmd-alt-ctrl-p) to run specs.
 //
 // To run a specific `it` or `describe` block add an `f` to the front (e.g. `fit`
 // or `fdescribe`). Remove the `f` to unfocus the block.
 
-describe('AtomBuildFpm', () => {
-  let workspaceElement, activationPromise;
+describe('fpm', () => {
+    let directory;
+    let builder;
+    const Builder = provideBuilder();
 
-  beforeEach(() => {
-    workspaceElement = atom.views.getView(atom.workspace);
-    activationPromise = atom.packages.activatePackage('atom-build-fpm');
-  });
-
-  describe('when the atom-build-fpm:toggle event is triggered', () => {
-    it('hides and shows the modal panel', () => {
-      // Before the activation event the view is not on the DOM, and no panel
-      // has been created
-      expect(workspaceElement.querySelector('.atom-build-fpm')).not.toExist();
-
-      // This is an activation event, triggering it will cause the package to be
-      // activated.
-      atom.commands.dispatch(workspaceElement, 'atom-build-fpm:toggle');
-
-      waitsForPromise(() => {
-        return activationPromise;
-      });
-
-      runs(() => {
-        expect(workspaceElement.querySelector('.atom-build-fpm')).toExist();
-
-        let atomBuildFpmElement = workspaceElement.querySelector('.atom-build-fpm');
-        expect(atomBuildFpmElement).toExist();
-
-        let atomBuildFpmPanel = atom.workspace.panelForItem(atomBuildFpmElement);
-        expect(atomBuildFpmPanel.isVisible()).toBe(true);
-        atom.commands.dispatch(workspaceElement, 'atom-build-fpm:toggle');
-        expect(atomBuildFpmPanel.isVisible()).toBe(false);
-      });
+    beforeEach(() => {
+        waitsForPromise(() => {
+            return vouch(temp.mkdir, 'atom-build-fpm-spec-')
+                .then((dir) => vouch(fs.realpath, dir))
+                .then((dir) => (directory = `${dir}/`))
+                .then((dir) => builder = new Builder(dir));
+        });
     });
 
-    it('hides and shows the view', () => {
-      // This test shows you an integration test testing at the view level.
-
-      // Attaching the workspaceElement to the DOM is required to allow the
-      // `toBeVisible()` matchers to work. Anything testing visibility or focus
-      // requires that the workspaceElement is on the DOM. Tests that attach the
-      // workspaceElement to the DOM are generally slower than those off DOM.
-      jasmine.attachToDOM(workspaceElement);
-
-      expect(workspaceElement.querySelector('.atom-build-fpm')).not.toExist();
-
-      // This is an activation event, triggering it causes the package to be
-      // activated.
-      atom.commands.dispatch(workspaceElement, 'atom-build-fpm:toggle');
-
-      waitsForPromise(() => {
-        return activationPromise;
-      });
-
-      runs(() => {
-        // Now we can test for view visibility
-        let atomBuildFpmElement = workspaceElement.querySelector('.atom-build-fpm');
-        expect(atomBuildFpmElement).toBeVisible();
-        atom.commands.dispatch(workspaceElement, 'atom-build-fpm:toggle');
-        expect(atomBuildFpmElement).not.toBeVisible();
-      });
+    afterEach(() => {
+        fs.removeSync(directory);
     });
-  });
+
+    describe('when fpm.toml exists', () => {
+        beforeEach(() => {
+            fs.writeFileSync(directory + 'fpm.toml', fs.readFileSync(`${__dirname}/fpm.toml`));
+        });
+
+        it('should be eligible', () => {
+            expect(builder.isEligible(directory)).toBe(true);
+        });
+
+        it('should yield available targets', () => {
+            waitsForPromise(() => {
+                return Promise.resolve(builder.settings(directory)).then((settings) => {
+                    expect(settings.length).toBe(1); // build target
+
+                    const defaultTarget = settings[0]; // build MUST be first
+                    expect(defaultTarget.name).toBe('fpm build');
+                    expect(defaultTarget.exec).toBe('fpm');
+                    expect(defaultTarget.args).toEqual([ 'build' ]);
+                    expect(defaultTarget.sh).toBe(false);
+                });
+            });
+        });
+    });
+
+    describe('when fpm.toml does not exist', () => {
+        it('should not be eligible', () => {
+            expect(builder.isEligible(directory)).toBe(false);
+        });
+    });
 });
