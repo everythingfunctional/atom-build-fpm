@@ -1,5 +1,5 @@
 {
-  "name": "atom-build-fpm",
+  "name": "build-fpm",
   "version": "0.1.0",
   "description": "Runs the Fortran Package Manager (fpm)",
   "repository": "https://github.com/everythingfunctional/atom-build-fpm",
