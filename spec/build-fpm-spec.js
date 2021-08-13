@@ -10,14 +10,15 @@ import { provideBuilder } from '../lib/fpm';
 // To run a specific `it` or `describe` block add an `f` to the front (e.g. `fit`
 // or `fdescribe`). Remove the `f` to unfocus the block.
 
-describe('fpm', () => {
+describe('build-fpm', () => {
     let directory;
     let builder;
     const Builder = provideBuilder();
 
     beforeEach(() => {
+        atom.config.set('build-fpm.general', {compiler: ''})
         waitsForPromise(() => {
-            return vouch(temp.mkdir, 'atom-build-fpm-spec-')
+            return vouch(temp.mkdir, 'build-fpm-spec-')
                 .then((dir) => vouch(fs.realpath, dir))
                 .then((dir) => (directory = `${dir}/`))
                 .then((dir) => builder = new Builder(dir));
@@ -45,7 +46,7 @@ describe('fpm', () => {
                     const defaultTarget = settings[0]; // build MUST be first
                     expect(defaultTarget.name).toBe('fpm build');
                     expect(defaultTarget.exec).toBe('fpm');
-                    expect(defaultTarget.args).toEqual([ 'build' ]);
+                    expect(defaultTarget.args).toContain('build');
                     expect(defaultTarget.sh).toBe(false);
                 });
             });
