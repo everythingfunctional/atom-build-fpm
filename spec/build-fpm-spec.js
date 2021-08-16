@@ -16,7 +16,7 @@ describe('build-fpm', () => {
     const Builder = provideBuilder();
 
     beforeEach(() => {
-        atom.config.set('build-fpm.general', {compiler: '', profile: ''})
+        atom.config.set('build-fpm.general', {compiler: '', profile: '', flags: ''})
         waitsForPromise(() => {
             return vouch(temp.mkdir, 'build-fpm-spec-')
                 .then((dir) => vouch(fs.realpath, dir))
