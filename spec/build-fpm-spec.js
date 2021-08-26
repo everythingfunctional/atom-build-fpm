@@ -17,6 +17,7 @@ describe('build-fpm', () => {
 
     beforeEach(() => {
         atom.config.set('build-fpm.general', {compiler: '', profile: '', flags: ''})
+        atom.config.set('build-fpm.run', {example: false, target: '', runner: '', executable_arguments: ''})
         waitsForPromise(() => {
             return vouch(temp.mkdir, 'build-fpm-spec-')
                 .then((dir) => vouch(fs.realpath, dir))
@@ -41,7 +42,7 @@ describe('build-fpm', () => {
         it('should yield available targets', () => {
             waitsForPromise(() => {
                 return Promise.resolve(builder.settings(directory)).then((settings) => {
-                    expect(settings.length).toBe(1); // build target
+                    expect(settings.length).toBeGreaterThan(0);
 
                     const defaultTarget = settings[0]; // build MUST be first
                     expect(defaultTarget.name).toBe('fpm build');
